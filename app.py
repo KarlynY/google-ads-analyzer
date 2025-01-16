@@ -741,7 +741,12 @@ def analyze_campaign(df):
                             "What's the average cost per conversion?",
                             "What's the conversion trend?",
                             "Which day had the highest conversions?",
-                            "What's the total number of conversions?"
+                            "What's the total number of conversions?",
+                            "What's the best performing keyword by conversions?",
+                            "Which keyword has the highest CTR?",
+                            "What's the most expensive keyword?",
+                            "Which keyword has the highest spend?",
+                            "What's the worst performing keyword?"
                         ]
                         for suggestion in suggestions:
                             if st.button(suggestion, key=suggestion):
@@ -1004,6 +1009,67 @@ def answer_data_question(df, question):
                 best_roas_campaign = metrics.nlargest(1, 'ROAS')
                 return f"The campaign with highest ROAS is '{best_roas_campaign['Campaign'].iloc[0]}' with {best_roas_campaign['ROAS'].iloc[0]:.2f}% ROAS."
         
+        # Add keyword-specific patterns
+        if 'keyword' in question.lower():
+            # Best performing keywords
+            if 'best' in question or 'top' in question:
+                if 'conversion' in question or 'conv' in question:
+                    keyword_perf = df.groupby('Keyword').agg({
+                        'Conversions': 'sum',
+                        'Cost': 'sum',
+                        'Clicks': 'sum'
+                    }).reset_index()
+                    keyword_perf['Conv_Rate'] = (keyword_perf['Conversions'] / keyword_perf['Clicks'] * 100)
+                    best_keyword = keyword_perf.nlargest(1, 'Conv_Rate')
+                    return f"The best converting keyword is '{best_keyword['Keyword'].iloc[0]}' with a {best_keyword['Conv_Rate'].iloc[0]:.2f}% conversion rate"
+                
+                elif 'click' in question or 'ctr' in question:
+                    keyword_perf = df.groupby('Keyword').agg({
+                        'Clicks': 'sum',
+                        'Impressions': 'sum'
+                    }).reset_index()
+                    keyword_perf['CTR'] = (keyword_perf['Clicks'] / keyword_perf['Impressions'] * 100)
+                    best_keyword = keyword_perf.nlargest(1, 'CTR')
+                    return f"The keyword with highest CTR is '{best_keyword['Keyword'].iloc[0]}' with {best_keyword['CTR'].iloc[0]:.2f}% CTR"
+                
+                else:
+                    keyword_perf = df.groupby('Keyword')['Conversions'].sum()
+                    best_keyword = keyword_perf.idxmax()
+                    return f"The best performing keyword is '{best_keyword}' with {int(keyword_perf[best_keyword])} conversions"
+            
+            # Most expensive keywords
+            elif 'expensive' in question or 'cost' in question:
+                keyword_perf = df.groupby('Keyword').agg({
+                    'Cost': 'sum',
+                    'Clicks': 'sum'
+                }).reset_index()
+                keyword_perf['CPC'] = keyword_perf['Cost'] / keyword_perf['Clicks']
+                expensive_keyword = keyword_perf.nlargest(1, 'CPC')
+                return f"The most expensive keyword is '{expensive_keyword['Keyword'].iloc[0]}' with CPC of {currency} {expensive_keyword['CPC'].iloc[0]:.2f}"
+            
+            # Worst performing keywords
+            elif 'worst' in question or 'poor' in question:
+                keyword_perf = df.groupby('Keyword').agg({
+                    'Cost': 'sum',
+                    'Conversions': 'sum',
+                    'Clicks': 'sum'
+                }).reset_index()
+                keyword_perf['CPA'] = keyword_perf['Cost'] / keyword_perf['Conversions'].replace(0, float('inf'))
+                worst_keyword = keyword_perf.nlargest(1, 'CPA')
+                return f"The poorest performing keyword is '{worst_keyword['Keyword'].iloc[0]}' with CPA of {currency} {worst_keyword['CPA'].iloc[0]:.2f}"
+            
+            # Keyword spend
+            elif 'spend' in question:
+                keyword_spend = df.groupby('Keyword')['Cost'].sum()
+                top_keyword = keyword_spend.idxmax()
+                return f"The keyword with highest spend is '{top_keyword}' with {currency} {keyword_spend[top_keyword]:.2f}"
+            
+            # Keyword impressions
+            elif 'impression' in question:
+                keyword_imp = df.groupby('Keyword')['Impressions'].sum()
+                top_keyword = keyword_imp.idxmax()
+                return f"The keyword with most impressions is '{top_keyword}' with {int(keyword_imp[top_keyword])} impressions"
+
         else:
             return "I'm not sure about that. Try asking about spend, conversions, best/worst campaigns, average metrics, or trends."
             
