@@ -1019,6 +1019,24 @@ def main():
                 <li>Select your date/month/year column and analysis period</li>
                 <li>Map your columns to the required metrics</li>
                 <li>The analysis will provide a campaign summary and optimization recommendations</li>
+                <li>Your data file should be structured. Here's a sample: https://docs.google.com/spreadsheets/d/1RJB5C1ARKSliuRORNi5eJ-0eVUY4ADVrCQ3TguFPJ1I/edit?usp=sharing</li>
+                <li>Required columns in your data:
+                    <ul style='margin-left: 20px;'>
+                        <li>Campaign: Your campaign names</li>
+                        <li>Cost: Campaign spend</li>
+                        <li>Clicks: Number of clicks</li>
+                        <li>Impressions: Number of impressions</li>
+                        <li>Conversions: Number of conversions</li>
+                        <li>Month: In format 'MMM-YY' (e.g., Jan-24)</li>
+                    </ul>
+                </li>
+                <li>Optional but recommended columns:
+                    <ul style='margin-left: 20px;'>
+                        <li>Conv. Value: Conversion value for ROAS calculation</li>
+                        <li>Currency code: Your currency (defaults to CHF)</li>
+                        <li>Ad Group: For ad group level analysis</li>
+                    </ul>
+                </li>
             </ol>
         </div>
     """, unsafe_allow_html=True)
