@@ -169,6 +169,27 @@ def analyze_campaign(df):
         # Get currency at the beginning
         currency = df['Currency code'].iloc[0] if 'Currency code' in df.columns else 'CHF'
         
+        # Convert numeric columns to appropriate types
+        numeric_columns = {
+            'Cost': 'float64',
+            'Clicks': 'int64',
+            'Impressions': 'int64',
+            'Conversions': 'float64'
+        }
+
+        for col, dtype in numeric_columns.items():
+            if col in df.columns:
+                # Remove any currency symbols, commas, and spaces
+                df[col] = df[col].astype(str).str.replace('$', '').str.replace('£', '')
+                df[col] = df[col].str.replace(',', '').str.replace(' ', '')
+                df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0).astype(dtype)
+
+        # Convert Conv. Value if present
+        if 'Conv. Value' in df.columns:
+            df['Conv. Value'] = df['Conv. Value'].astype(str).str.replace('$', '').str.replace('£', '')
+            df['Conv. Value'] = df['Conv. Value'].str.replace(',', '').str.replace(' ', '')
+            df['Conv. Value'] = pd.to_numeric(df['Conv. Value'], errors='coerce').fillna(0).astype('float64')
+
         # Check for different types of date columns
         date_columns = [col for col in df.columns if any(term in col.lower() for term in ['date', 'month', 'year'])]
         
