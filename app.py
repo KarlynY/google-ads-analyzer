@@ -110,25 +110,42 @@ def apply_custom_style():
         </style>
     """, unsafe_allow_html=True)
 
-def load_google_sheet(sheet_url):
+def load_google_sheet(url):
     try:
-        # Instead of reading from JSON file, use st.secrets
+        # Get credentials from streamlit secrets
         credentials = service_account.Credentials.from_service_account_info(
-            st.secrets["gcp_service_account"]
+            st.secrets["gcp_service_account"],
+            scopes=[
+                "https://www.googleapis.com/auth/spreadsheets",  # Changed from .readonly
+                "https://www.googleapis.com/auth/drive"          # Changed from .readonly
+            ],
         )
+
+        # Extract the sheet ID from the URL
+        sheet_id = url.split('/d/')[1].split('/')[0]
         
-        client = gspread.authorize(credentials)
+        # Create the service
+        service = build('sheets', 'v4', credentials=credentials)
         
-        # Extract sheet ID from URL
-        sheet_id = sheet_url.split('/')[5]
-        sheet = client.open_by_key(sheet_id).sheet1
+        # Call the Sheets API
+        sheet = service.spreadsheets()
+        result = sheet.values().get(spreadsheetId=sheet_id, range='Sheet1').execute()
+        values = result.get('values', [])
         
-        # Get all values and convert to DataFrame
-        data = sheet.get_all_records()
-        df = pd.DataFrame(data)
+        if not values:
+            st.error('No data found in the sheet.')
+            return None
+            
+        # Convert to DataFrame
+        df = pd.DataFrame(values[1:], columns=values[0])
+        
+        # Display success message
+        st.success('Data loaded successfully!')
+        
         return df
+        
     except Exception as e:
-        st.error(f"Error loading sheet: {str(e)}")
+        st.error(f'Error loading sheet: {str(e)}')
         return None
 
 def load_csv_file(uploaded_file):
