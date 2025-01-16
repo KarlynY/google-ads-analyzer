@@ -22,4 +22,4 @@ A Streamlit application for analyzing Google Ads campaign data from Google Sheet
 - Time trend visualization
 - CTR and conversion rate analysis
 - Cost and click tracking
-- Actionable recommendations
+- Actionable recommendations# google-ads-analyzer
